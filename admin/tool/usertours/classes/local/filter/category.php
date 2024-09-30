@@ -37,6 +37,15 @@ class category extends base {
     }
 
     /**
+     * The name of the exclude filter.
+     *
+     * @return string The name of the exclude filter.
+     */
+    public static function get_filter_exclude_name(): string {
+        return 'exclude_category';
+    }
+
+    /**
      * Retrieve the list of available filter options.
      *
      * @return  array                   An array whose keys are the valid options
@@ -48,6 +57,24 @@ class category extends base {
     }
 
     /**
+     * Overrides the base add form element with a course selector.
+     *
+     * @param \MoodleQuickForm $mform
+     */
+    public static function add_filter_to_form(\MoodleQuickForm &$mform) {
+        parent::add_filter_to_form($mform);
+        $excludekey = 'filter_' . static::get_filter_exclude_name();
+        $mform->addElement(
+            'select',
+            $excludekey,
+            get_string($excludekey, 'tool_usertours'),
+            static::get_filter_options(),
+            ['multiple' => true]
+        );
+        $mform->addHelpButton($excludekey, $excludekey, 'tool_usertours');
+    }
+
+    /**
      * Check whether the filter matches the specified tour and/or context.
      *
      * @param   tour        $tour       The tour to check
@@ -55,15 +82,17 @@ class category extends base {
      * @return  boolean
      */
     public static function filter_matches(tour $tour, context $context) {
-        $values = $tour->get_filter_values(self::get_filter_name());
-        if (empty($values) || empty($values[0])) {
-            // There are no values configured, meaning all.
-            return true;
+        $includevalues = $tour->get_filter_values(static::get_filter_name());
+        $exlcudevalues = $tour->get_filter_values(static::get_filter_exclude_name());
+
+        if (empty($includevalues) || empty($includevalues[0])) {
+            return !static::check_contexts($context, $exlcudevalues);
         }
+
         if ($context->contextlevel < CONTEXT_COURSECAT) {
             return false;
         }
-        return self::check_contexts($context, $values);
+        return static::check_contexts($context, $includevalues) && !static::check_contexts($context, $exlcudevalues);
     }
 
     /**
@@ -73,17 +102,52 @@ class category extends base {
      * @param array $values
      * @return boolean
      */
-    private static function check_contexts(context $context, $values) {
+    private static function check_contexts(context $context, array $values): bool {
+        if (empty($values)) {
+            return false;
+        }
+
         if ($context->contextlevel > CONTEXT_COURSECAT) {
-            return self::check_contexts($context->get_parent_context(), $values);
+            return static::check_contexts($context->get_parent_context(), $values);
         } else if ($context->contextlevel == CONTEXT_COURSECAT) {
             if (in_array($context->instanceid, $values)) {
                 return true;
             } else {
-                return self::check_contexts($context->get_parent_context(), $values);
+                return static::check_contexts($context->get_parent_context(), $values);
             }
         } else {
             return false;
         }
+    }
+
+    /**
+     * Overrides the base prepare the filter values for the form
+     *
+     * @param tour $tour
+     * @param \stdClass $data
+     * @return \stdClass
+     */
+    public static function prepare_filter_values_for_form(tour $tour, \stdClass $data) {
+        parent::prepare_filter_values_for_form($tour, $data);
+        $exlcudefiltername = static::get_filter_exclude_name();
+        $excludekey = "filter_$exlcudefiltername";
+        $data->$excludekey = $tour->get_filter_values($exlcudefiltername);
+
+        return $data;
+    }
+
+    /**
+     * Overrides the base save the filter values from the form to the tour.
+     *
+     * @param tour $tour
+     * @param \stdClass $data
+     * @return void
+     */
+    public static function save_filter_values_from_form(tour $tour, \stdClass $data) {
+        parent::save_filter_values_from_form($tour, $data);
+        $excludefiltername = static::get_filter_exclude_name();
+        $excludekey = "filter_$excludefiltername";
+        $categoryexcludes = $data->$excludekey;
+        $tour->set_filter_values($excludefiltername, $categoryexcludes);
     }
 }
