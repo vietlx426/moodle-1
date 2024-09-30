@@ -25,10 +25,10 @@ use context;
 /**
  * Tests for category filter.
  *
- * @package    tool_usertours
- * @copyright  2024 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers    \tool_usertours\local\filter\category
+ * @package tool_usertours
+ * @copyright 2024 The Open University
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @covers \tool_usertours\local\filter\category
  */
 final class category_filter_test extends \advanced_testcase {
     /** @var \core_course_category */

@@ -72,21 +72,20 @@ $string['exporttour'] = 'Export tour';
 $string['filter_accessdate'] = 'Access date';
 $string['filter_accessdate_enabled'] = 'Enable access date filter';
 $string['filter_accessdate_enabled_help'] = 'Only show the tour to new users or users who have accessed the site recently.';
-$string['filter_category'] = 'Include category';
+$string['filter_category'] = 'Category';
 $string['filter_category_help'] = "Show this tour on pages associated with courses in the selected categories.
 When 'All' option is selected, selecting any other category will unselect 'All' option.
 If you select any categories, the 'All' option will be disabled until all categories are unselected.";
 $string['filter_course'] = 'Selected courses';
 $string['filter_course_error_course_selection'] = 'You must select at least one course';
-$string['filter_course_help'] = 'Show/Not show this tour on pages associated with the selected course(s)';
+$string['filter_course_help'] = 'Show (or, if \'All courses except selected\' is chosen above, do not show) this tour on pages associated with the selected courses.';
 $string['filter_course_operator'] = 'Courses';
 $string['filter_course_operator_all'] = 'All courses';
 $string['filter_course_operator_except'] = 'All courses except selected';
-$string['filter_course_operator_help'] = "Select the filter operation you want to applies. 'All courses' will be the default option.
-If you choose 'Selected courses only' or 'All courses except selected', the Selected courses setting field will appear below.
-<ul><li>All courses: Show this tour on pages associated with all available courses.</li>
-<li>Selected courses only: Show this tour on pages associated with the selected course(s).</li>
-<li>All courses except selected: Do not show this tour on pages associated with the selected course(s).</li></ul>";
+$string['filter_course_operator_help'] = "The tour can be configured to appear only on certain courses.
+<ul><li>All courses: Show this tour regardless of course.</li>
+<li>Selected courses only: Show this tour only on pages associated with the course(s) selected below.</li>
+<li>All courses except selected: Do not show this tour on pages associated with the course(s) selected below.</li></ul>";
 $string['filter_course_operator_select'] = 'Selected courses only';
 $string['filter_courseformat'] = 'Course format';
 $string['filter_courseformat_help'] = 'Show the tour on a page that is associated with a course using the selected course format.';
