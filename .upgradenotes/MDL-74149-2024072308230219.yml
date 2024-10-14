@@ -1,0 +1,5 @@
+issueNumber: MDL-74149
+notes:
+  tool_usertours:
+    - message: Filters to include/exclude categories and filter operation courses
+      type: improved

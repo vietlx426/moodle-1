@@ -398,6 +398,7 @@ class manager {
             }
 
             $form->display();
+            $PAGE->requires->js_call_amd('tool_usertours/configurationtour', 'init');
             $this->footer();
         }
     }

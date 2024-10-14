@@ -29,6 +29,7 @@ defined('MOODLE_INTERNAL') || die('Direct access to this script is forbidden.');
 require_once($CFG->libdir . '/formslib.php');
 
 use tool_usertours\helper;
+use tool_usertours\local\filter\course;
 use tool_usertours\tour;
 
 /**
@@ -112,5 +113,20 @@ class edittour extends \moodleform {
         }
 
         $this->add_action_buttons();
+    }
+
+    /**
+     * Override the validation method to add course selection validation.
+     *
+     * @param array $data array of ("fieldname"=>value) of submitted data
+     * @param array $files array of uploaded files "element_name"=>tmp_file_path
+     * @return array of "element_name"=>"error_description" if there are errors,
+     *          or an empty array if everything is OK (true allowed for backwards compatibility too).
+     */
+    public function validation($data, $files): array {
+        $errors = parent::validation($data, $files);
+
+        // Validate the course selection.
+        return course::validate_course_selection($data, $errors);
     }
 }
