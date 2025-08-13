@@ -1506,4 +1506,78 @@ final class engine_test extends \advanced_testcase {
         }
         $this->assertEquals($expected, $titles);
     }
+
+    /**
+     * Test get_index_stats public method.
+     *
+     * @covers ::get_index_stats
+     */
+    public function test_get_index_stats(): void {
+        set_config('searchengine', 'solr');
+
+        $stats = \search_solr\engine::get_index_stats();
+
+        $this->assertIsArray($stats, 'If not false, get_index_stats should return array');
+        $this->assertArrayHasKey('size', $stats);
+        $this->assertArrayHasKey('connected', $stats);
+        $this->assertArrayHasKey('time', $stats);
+
+        // Test with Solr disabled.
+        set_config('searchengine', '');
+        $stats = \search_solr\engine::get_index_stats();
+        $this->assertFalse($stats, 'Should return false when Solr disabled');
+    }
+
+    /**
+     * Test is_over_threshold public method.
+     *
+     * @covers ::is_over_threshold
+     */
+    public function test_is_over_threshold(): void {
+        set_config('searchengine', 'solr');
+
+        // Test with zero threshold (should always return false).
+        $result = \search_solr\engine::is_over_threshold(0);
+        $this->assertFalse($result, 'Zero threshold should return false');
+
+        // Test with negative threshold (should return false).
+        $result = \search_solr\engine::is_over_threshold(-1000);
+        $this->assertFalse($result, 'Negative threshold should return false');
+
+        // Test with configured threshold.
+        set_config('indexsizelimit', 1073741824, 'search_solr'); // 1GB
+        $result = \search_solr\engine::is_over_threshold();
+        $this->assertIsBool($result, 'Should return boolean');
+
+        // Test with custom threshold.
+        $result = \search_solr\engine::is_over_threshold(1000);
+        $this->assertIsBool($result, 'Should return boolean with custom threshold');
+    }
+
+    /**
+     * Test is_approaching_threshold public method.
+     *
+     * @covers ::is_approaching_threshold
+     */
+    public function test_is_approaching_threshold(): void {
+        set_config('searchengine', 'solr');
+
+        // Test with no threshold.
+        $result = \search_solr\engine::is_approaching_threshold(0);
+        $this->assertFalse($result, 'Zero threshold should return false');
+
+        // Test with null when no config.
+        set_config('indexsizelimit', '', 'search_solr');
+        $result = \search_solr\engine::is_approaching_threshold();
+        $this->assertFalse($result, 'No threshold should return false');
+
+        // Test with configured threshold.
+        set_config('indexsizelimit', 1073741824, 'search_solr');
+        $result = \search_solr\engine::is_approaching_threshold();
+        $this->assertIsBool($result, 'Should return boolean');
+
+        // Test with negative threshold.
+        $result = \search_solr\engine::is_approaching_threshold(-1000);
+        $this->assertFalse($result, 'Negative threshold should return false');
+    }
 }

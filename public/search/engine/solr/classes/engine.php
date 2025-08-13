@@ -1791,4 +1791,93 @@ class engine extends \core_search\engine {
                 !empty($this->config->alternateindexname) &&
                 !empty($this->config->alternateserver_port);
     }
+
+    /**
+     * Get the current index statistics.
+     * Public method for external use (e.g., in scheduled tasks).
+     *
+     * @return array|false Array with size and doccount, or false on error.
+     */
+    public static function get_index_stats(): array|false {
+        try {
+            $engine = \core_search\manager::search_engine_instance();
+            if (!$engine instanceof \search_solr\engine) {
+                return false;
+            }
+
+            $status = $engine->get_status();
+
+            if (!$status['connected'] || !$status['foundcore']) {
+                return false;
+            }
+
+            return [
+                'size' => $status['indexsize'] ?? 0,
+                'doccount' => $status['doccount'] ?? 0,
+                'time' => $status['time'] ?? 0,
+            ];
+        } catch (\Exception $e) {
+            debugging('Failed to get Solr index statistics: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            return false;
+        }
+    }
+
+    /**
+     * Check if index size is over threshold.
+     * Public method for external use (e.g., in scheduled tasks).
+     *
+     * @param int|null $threshold Threshold in bytes (null to use configured value).
+     * @return bool True if over threshold, false otherwise.
+     */
+    public static function is_over_threshold($threshold = null): bool {
+        try {
+            if ($threshold === null) {
+                $threshold = get_config('search_solr', 'indexsizelimit');
+            }
+
+            if (empty($threshold)) {
+                return false;
+            }
+
+            $stats = self::get_index_stats();
+            if ($stats === false) {
+                return false;
+            }
+
+            return $stats['size'] > $threshold;
+        } catch (\Exception $e) {
+            debugging('Failed to check Solr threshold: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            return false;
+        }
+    }
+
+    /**
+     * Check if index size is approaching threshold (90%).
+     * Public method for external use.
+     *
+     * @param int|null $threshold Threshold in bytes (null to use configured value).
+     * @return bool True if over 90% of threshold, false otherwise.
+     */
+    public static function is_approaching_threshold($threshold = null): bool {
+        try {
+            if ($threshold === null) {
+                $threshold = get_config('search_solr', 'indexsizelimit');
+            }
+
+            if (empty($threshold)) {
+                return false;
+            }
+
+            $stats = self::get_index_stats();
+            if ($stats === false) {
+                return false;
+            }
+
+            $warningthreshold = ($threshold * 9) / 10;
+            return $stats['size'] > $warningthreshold;
+        } catch (\Exception $e) {
+            debugging('Failed to check Solr warning threshold: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            return false;
+        }
+    }
 }
