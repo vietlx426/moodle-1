@@ -84,9 +84,8 @@ class connection extends check {
 
         } else {
             // Errors related to finding the core size only show if the size warning is configured.
-            $sizelimit = get_config('search_solr', 'indexsizelimit');
             if (!array_key_exists('indexsize', $status)) {
-                if ($sizelimit) {
+                if ($engine->get_threshold()) {
                     $result = result::ERROR;
                     $resultstr = get_string('check_nosize', 'search_solr');
                     $resultdetails .= \html_writer::tag('p', s($status['error']));
@@ -99,18 +98,14 @@ class connection extends check {
                     display_size($status['indexsize']),
                 );
                 $resultdetails .= \html_writer::tag('p', $sizestr);
-                if ($sizelimit) {
-                    // Error at specified index size, warning at 90% of it.
-                    $sizewarning = ($sizelimit * 9) / 10;
-                    if ($status['indexsize'] > $sizewarning) {
-                        if ($status['indexsize'] > $sizelimit) {
-                            $resultstr = get_string('check_indextoobig', 'search_solr');
-                            $result = result::ERROR;
-                        } else {
-                            // We don't say it's too big because it isn't yet, just show the size.
-                            $resultstr = $sizestr;
-                            $result = result::WARNING;
-                        }
+                if ($engine->get_threshold()) {
+                    if ($engine->is_over_threshold()) {
+                        $resultstr = get_string('check_indextoobig', 'search_solr');
+                        $result = result::ERROR;
+                    } else if ($engine->is_approaching_threshold()) {
+                        // We don't say it's too big because it isn't yet, just show the size.
+                        $resultstr = $sizestr;
+                        $result = result::WARNING;
                     }
                 }
             }

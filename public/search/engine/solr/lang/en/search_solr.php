@@ -37,9 +37,12 @@ $string['fileindexing'] = 'Enable file indexing';
 $string['fileindexing_help'] = 'If your Solr install supports it, this feature allows Moodle to send files to be indexed.<br/>
 You will need to reindex all site contents after enabling this option for all files to be added.';
 $string['fileindexsettings'] = 'File indexing settings';
+$string['indexcurrentsize'] = 'Current: {$a}';
+$string['indexcurrentsizewithlimit'] = 'Current: {$a->size} ({$a->percent}% of limit)';
 $string['indexsize'] = 'The index is using {$a} on the Solr server.';
 $string['indexsizelimit'] = 'Index size limit';
 $string['indexsizelimit_desc'] = 'Shows an error on the status report page if the search index grows larger than this size (in bytes), and a warning if it exceeds 90%. Set to zero for no index size limit.';
+$string['indexstatusheading'] = 'Index status';
 $string['maxindexfilekb'] = 'Maximum file size to index (kB)';
 $string['maxindexfilekb_help'] = 'Files larger than this number of kilobytes will not be included in search indexing. If set to zero, files of any size will be indexed.';
 $string['minimumsolr4'] = 'Solr 4.0 is the minimum version required for Moodle';

@@ -144,4 +144,79 @@ final class engine_test extends \advanced_testcase {
 
         $generator->teardown();
     }
+
+    /**
+     * Test get_index_stats default returns false for engines that do not support it.
+     *
+     * @covers \core_search\engine::get_index_stats
+     */
+    public function test_get_index_stats_default(): void {
+        $engine = new \mock_search\engine();
+        $this->assertFalse(
+            $engine->get_index_stats(),
+            'Base engine should return false from get_index_stats() by default'
+        );
+    }
+
+    /**
+     * Test get_threshold reads the indexsizelimit config key for the engine plugin.
+     *
+     * @covers \core_search\engine::get_threshold
+     */
+    public function test_get_threshold(): void {
+        $engine = new \mock_search\engine();
+
+        // No config set: should return 0.
+        $this->assertSame(0, $engine->get_threshold());
+
+        // Set a limit and verify it is returned.
+        set_config('indexsizelimit', 1073741824, 'mock_search');
+        $this->assertSame(1073741824, $engine->get_threshold());
+
+        // Unset the config: should return 0 again.
+        set_config('indexsizelimit', '', 'mock_search');
+        $this->assertSame(0, $engine->get_threshold());
+    }
+
+    /**
+     * Test is_over_threshold returns false when no stats are available or no limit set.
+     *
+     * @covers \core_search\engine::is_over_threshold
+     */
+    public function test_is_over_threshold_base_defaults(): void {
+        $engine = new \mock_search\engine();
+
+        // No threshold configured: always false.
+        $this->assertFalse($engine->is_over_threshold());
+
+        // Zero threshold: always false.
+        $this->assertFalse($engine->is_over_threshold(0));
+
+        // Negative threshold: always false.
+        $this->assertFalse($engine->is_over_threshold(-1));
+
+        // Positive threshold but engine has no stats: false.
+        $this->assertFalse($engine->is_over_threshold(1000));
+    }
+
+    /**
+     * Test is_approaching_threshold returns false when no stats are available or no limit set.
+     *
+     * @covers \core_search\engine::is_approaching_threshold
+     */
+    public function test_is_approaching_threshold_base_defaults(): void {
+        $engine = new \mock_search\engine();
+
+        // No threshold configured: always false.
+        $this->assertFalse($engine->is_approaching_threshold());
+
+        // Zero threshold: always false.
+        $this->assertFalse($engine->is_approaching_threshold(0));
+
+        // Negative threshold: always false.
+        $this->assertFalse($engine->is_approaching_threshold(-1));
+
+        // Positive threshold but engine has no stats: false.
+        $this->assertFalse($engine->is_approaching_threshold(1000));
+    }
 }

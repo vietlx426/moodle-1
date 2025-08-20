@@ -1506,4 +1506,22 @@ final class engine_test extends \advanced_testcase {
         }
         $this->assertEquals($expected, $titles);
     }
+
+    /**
+     * Test get_index_stats override for Solr.
+     *
+     * @covers ::get_index_stats
+     */
+    public function test_get_index_stats(): void {
+        $engine = new \search_solr\engine();
+
+        $stats = $engine->get_index_stats();
+
+        // When connected to Solr, stats should be an array with required keys.
+        $this->assertIsArray($stats, 'get_index_stats() should return an array when Solr is available');
+        $this->assertArrayHasKey('size', $stats);
+        $this->assertArrayHasKey('time', $stats);
+        $this->assertIsInt($stats['size']);
+        $this->assertGreaterThanOrEqual(0, $stats['size']);
+    }
 }

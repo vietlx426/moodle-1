@@ -57,6 +57,37 @@ if ($ADMIN->fulltree) {
                 PARAM_INT,
             ));
 
+            $stats = false;
+            $statsengine = null;
+            try {
+                $statsengine = \core_search\manager::search_engine_instance();
+                $stats = $statsengine->get_index_stats();
+            } catch (\Throwable $t) {
+                // Engine not available; skip the status display.
+                unset($t);
+            }
+            if ($stats !== false) {
+                $currentsize = display_size($stats['size']);
+                $limit = $statsengine->get_threshold();
+
+                if ($limit > 0) {
+                    $percent = round(($stats['size'] / $limit) * 100, 1);
+                    $statustext = get_string(
+                        'indexcurrentsizewithlimit',
+                        'search_solr',
+                        ['size' => $currentsize, 'percent' => $percent]
+                    );
+                } else {
+                    $statustext = get_string('indexcurrentsize', 'search_solr', $currentsize);
+                }
+
+                $settings->add(new admin_setting_description(
+                    'search_solr/currentstatus',
+                    new lang_string('indexstatusheading', 'search_solr'),
+                    $statustext
+                ));
+            }
+
             $settings->add(new admin_setting_heading('search_solr_fileindexing',
                     new lang_string('fileindexsettings', 'search_solr'), ''));
             $settings->add(new admin_setting_configcheckbox('search_solr/fileindexing',

@@ -778,4 +778,73 @@ abstract class engine {
     public function has_alternate_configuration(): bool {
         return false;
     }
+
+    /**
+     * Returns statistics about the current search index.
+     *
+     * Engines that support index size monitoring should override this method.
+     * The returned array must include at least a 'size' key (index size in bytes).
+     *
+     * @return array|false Array with at least 'size' (bytes), or false if not supported or unavailable.
+     */
+    public function get_index_stats(): array|false {
+        return false;
+    }
+
+    /**
+     * Returns the configured index size limit for this engine, in bytes.
+     *
+     * Reads the 'indexsizelimit' configuration key for the engine's plugin.
+     * Override this method if the engine uses a different configuration key.
+     *
+     * @return int Index size limit in bytes, or 0 for no limit.
+     */
+    public function get_threshold(): int {
+        return (int) get_config($this->get_plugin_name(), 'indexsizelimit');
+    }
+
+    /**
+     * Returns true if the search index is over the specified or configured size limit.
+     *
+     * Returns false if no limit is set, index stats are unavailable, or the index is within limits.
+     *
+     * @param int|null $threshold Size limit in bytes, or null to use the configured value.
+     * @return bool True if the index exceeds the threshold.
+     */
+    public function is_over_threshold(?int $threshold = null): bool {
+        if ($threshold === null) {
+            $threshold = $this->get_threshold();
+        }
+        if ($threshold <= 0) {
+            return false;
+        }
+        $stats = $this->get_index_stats();
+        if ($stats === false) {
+            return false;
+        }
+        return $stats['size'] > $threshold;
+    }
+
+    /**
+     * Returns true if the search index is approaching the specified or configured size limit.
+     *
+     * 'Approaching' is defined as exceeding 90% of the limit. Returns false if no limit is
+     * set, index stats are unavailable, or the index is well within limits.
+     *
+     * @param int|null $threshold Size limit in bytes, or null to use the configured value.
+     * @return bool True if the index exceeds 90% of the threshold.
+     */
+    public function is_approaching_threshold(?int $threshold = null): bool {
+        if ($threshold === null) {
+            $threshold = $this->get_threshold();
+        }
+        if ($threshold <= 0) {
+            return false;
+        }
+        $stats = $this->get_index_stats();
+        if ($stats === false) {
+            return false;
+        }
+        return $stats['size'] > ($threshold * 9 / 10);
+    }
 }

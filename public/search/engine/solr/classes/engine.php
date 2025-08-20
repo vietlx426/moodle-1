@@ -1791,4 +1791,35 @@ class engine extends \core_search\engine {
                 !empty($this->config->alternateindexname) &&
                 !empty($this->config->alternateserver_port);
     }
+
+    /**
+     * Get the current index statistics.
+     *
+     * Overrides the base class method to provide Solr-specific index stats.
+     * Called by {@see \core_search\engine::is_over_threshold()} and
+     * {@see \core_search\engine::is_approaching_threshold()}.
+     *
+     * @return array|false Array with 'size' (bytes) and 'time' (seconds), or false on error.
+     */
+    public function get_index_stats(): array|false {
+        try {
+            $status = $this->get_status();
+
+            if (!$status['connected'] || !$status['foundcore']) {
+                return false;
+            }
+
+            if (!array_key_exists('indexsize', $status)) {
+                return false;
+            }
+
+            return [
+                'size' => $status['indexsize'],
+                'time' => $status['time'] ?? 0,
+            ];
+        } catch (\Throwable $t) {
+            debugging('Failed to get Solr index statistics: ' . $t->getMessage(), DEBUG_DEVELOPER);
+            return false;
+        }
+    }
 }
