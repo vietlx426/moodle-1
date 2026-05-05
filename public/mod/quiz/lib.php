@@ -1863,6 +1863,193 @@ function quiz_extend_settings_navigation(settings_navigation $settings, navigati
 }
 
 /**
+ * Get quiz overrides template file for users or groups.
+ *
+ * @param stdClass $context Context object.
+ * @param int $quizid Quiz object.
+ * @param string $mode The mode of overrides to retrieve ('user' or 'group').
+ * @param stdClass $cm Course module object.
+ *
+ * @return array An array of formatted overrides.
+ */
+function get_overrides_import_template(stdClass $context, int $quizid, string $mode, stdClass $cm): array {
+    global $DB, $USER;
+
+    $overrideoptions = ['timeopen', 'timeclose', 'timelimit', 'attempts', 'password', 'set_password'];
+
+    if ($mode == 'user') {
+        // Get all users who can attempt the quiz (keyed by user id).
+        $entities = get_users_by_capability(
+            $context,
+            'mod/quiz:attempt',
+            'u.id as userid',
+            'u.id ASC',
+        );
+    } else {
+        // The groups_get_all_groups() helper keys results by g.id; include it for the merge below,
+        // then strip it before export so the CSV only has groupid and groupname.
+        $entities = groups_get_all_groups($cm->course, 0, 0, 'g.id as groupid, g.name as groupname');
+    }
+
+    // Ensure exported file contains commas for each option.
+    foreach ($entities as $entity) {
+        foreach ($overrideoptions as $option) {
+            $entity->{$option} = null;
+        }
+    }
+
+    $modeid = $mode . 'id';
+    // Retrieve existing quiz overrides and merge their values into the entity rows.
+    $columns = "id, $modeid, quiz, timeopen, timeclose, timelimit, attempts, password, '' as set_password";
+    $quizoverrides = $DB->get_records_select('quiz_overrides', 'quiz = :quizid', ['quizid' => $quizid], '', $columns);
+
+    foreach ($quizoverrides as $override) {
+        $entityid = $override->$modeid;
+        if (!isset($entities[$entityid])) {
+            continue;
+        }
+        foreach ($overrideoptions as $option) {
+            if ($option === 'timeopen' || $option === 'timeclose') {
+                if (empty($override->{$option})) {
+                    $entities[$entityid]->{$option} = null;
+                    continue;
+                }
+                $timezone = core_date::get_user_timezone($USER);
+                $datetime = new \DateTime();
+                $datetime->setTimestamp(intval($override->{$option}));
+                $datetime->setTimezone(new DateTimeZone($timezone));
+                $entities[$entityid]->{$option} = $datetime->format('Y-m-d H:i P');
+            } else {
+                $entities[$entityid]->{$option} = $override->{$option} ?? null;
+            }
+        }
+    }
+
+    // Strip the internal groupid used for merging — it is not part of the CSV format.
+    if ($mode === 'group') {
+        foreach ($entities as $entity) {
+            unset($entity->groupid);
+        }
+    }
+
+    $overrides = $entities;
+
+    if ($mode === 'user') {
+        $exampledata = (object) [
+            'userid' => 0,
+            'timeopen' => '2024-05-28 14:57 +10:00',
+            'timeclose' => '2024-05-31 15:33 +10:00',
+            'timelimit' => 1200,
+            'attempts' => 6,
+            'password' => 'testpassword',
+            'set_password' => '',
+        ];
+    } else {
+        $exampledata = (object) [
+            'groupid' => 'exampleidnumber',
+            'groupname' => 'examplegroup',
+            'timeopen' => '2024-05-28 14:57 +10:00',
+            'timeclose' => '2024-05-31 15:33 +10:00',
+            'timelimit' => 1200,
+            'attempts' => 6,
+            'password' => 'testpassword',
+            'set_password' => '',
+        ];
+    }
+
+    array_unshift($overrides, $exampledata);
+
+    return $overrides;
+}
+
+/**
+ * Get quiz overrides for users or groups.
+ *
+ * @param string $mode The mode of overrides to retrieve ('user' or 'group').
+ * @param bool $template Whether to use an import template.
+ * @param stdClass $context Context object.
+ * @param stdClass $cm Course module object.
+ * @param stdClass $quiz Quiz object.
+ *
+ * @return array|false An array of override records, or false if no overrides found.
+ */
+function get_overrides(string $mode, bool $template, stdClass $context, stdClass $cm, stdClass $quiz): array|false {
+    global $DB, $USER;
+
+    $overrides = [];
+
+    // Perform necessary checks to ensure correct data is exported for user's visibility.
+    $quizgroupmode = groups_get_activity_groupmode($cm);
+    $showallgroups = ($quizgroupmode == NOGROUPS) || has_capability('moodle/site:accessallgroups', $context);
+    $groups = $showallgroups ? groups_get_all_groups($cm->course) : groups_get_activity_allowed_groups($cm);
+
+    $sql = '';
+    $sqlparams = [];
+
+    // Required fields from the quiz_overrides table.
+    // The set_password is derived: 1 if a password is set, 0 if not.
+    $overridefieldssql = "o.timeopen, o.timeclose, o.timelimit, o.attempts,
+        o.password,
+        CASE WHEN o.password IS NOT NULL THEN '1' ELSE '0' END AS set_password";
+
+    if ($mode == 'user') {
+        [$sort, $sqlparams] = users_order_by_sql('u', null, $context, []);
+
+        $sqlparams['quizid'] = $quiz->id;
+
+        if ($showallgroups) {
+            $groupsjoin = '';
+            $groupswhere = '';
+        } else if ($groups) {
+            [$insql, $inparams] = $DB->get_in_or_equal(array_keys($groups), SQL_PARAMS_NAMED);
+            $groupsjoin = 'JOIN {groups_members} gm ON u.id = gm.userid';
+            $groupswhere = ' AND gm.groupid ' . $insql;
+            $sqlparams += $inparams;
+        } else {
+            // User cannot see any data.
+            $groupsjoin = '';
+            $groupswhere = ' AND 1 = 2';
+        }
+
+        $sql = "SELECT u.id as userid, {$overridefieldssql}
+            FROM {quiz_overrides} o
+            JOIN {user} u ON o.userid = u.id $groupsjoin
+            WHERE o.quiz = :quizid AND o.userid IS NOT NULL$groupswhere";
+    } else {
+        // To filter the result by the list of groups that the current user has access to.
+        [$insql, $inparams] = $DB->get_in_or_equal(array_keys($groups), SQL_PARAMS_NAMED);
+        $sqlparams['quizid'] = $quiz->id;
+        $sqlparams += $inparams;
+
+        $sql = "SELECT g.id AS groupid, g.name AS groupname, {$overridefieldssql}
+                FROM {quiz_overrides} o
+                JOIN {groups} g ON o.groupid = g.id
+                WHERE o.quiz = :quizid AND o.groupid IS NOT NULL AND g.id $insql";
+    }
+
+    $overrides = $DB->get_records_sql($sql, $sqlparams);
+    foreach ($overrides as $override) {
+        foreach (['timeopen', 'timeclose'] as $option) {
+            if (empty($override->{$option})) {
+                $override->{$option} = null;
+            } else {
+                $timezone = \core_date::get_server_timezone();
+                $datetime = new \DateTime();
+                $datetime->setTimestamp(intval($override->{$option}));
+                $datetime->setTimezone(new \DateTimeZone($timezone));
+                $override->{$option} = $datetime->format('Y-m-d H:i P');
+            }
+        }
+    }
+
+    if (!$overrides) {
+        return false;
+    }
+
+    return $overrides;
+}
+
+/**
  * Serves the quiz files.
  *
  * @package  mod_quiz
@@ -1890,23 +2077,72 @@ function quiz_pluginfile($course, $cm, $context, $filearea, $args, $forcedownloa
     }
 
     // The 'intro' area is served by pluginfile.php.
-    $fileareas = ['feedback'];
+    $fileareas = ['feedback', 'overrides'];
     if (!in_array($filearea, $fileareas)) {
         return false;
     }
 
-    $feedbackid = (int)array_shift($args);
-    if (!$feedback = $DB->get_record('quiz_feedback', ['id' => $feedbackid])) {
-        return false;
+    if ($filearea === 'feedback') {
+        $feedbackid = (int)array_shift($args);
+        if (!$feedback = $DB->get_record('quiz_feedback', ['id' => $feedbackid])) {
+            return false;
+        }
+
+        $fs = get_file_storage();
+        $relativepath = implode('/', $args);
+        $fullpath = "/$context->id/mod_quiz/$filearea/$feedbackid/$relativepath";
+        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) || $file->is_directory()) {
+            return false;
+        }
+        send_stored_file($file, 0, 0, true, $options);
+    } else if ($filearea === 'overrides') {
+        $mode = (string)array_shift($args);
+        $template = optional_param('template', 0, PARAM_BOOL);
+
+        require_capability('mod/quiz:manageoverrides', $context);
+
+        $overrides = get_overrides($mode, $template, $context, $cm, $quiz);
+
+        if (!$overrides) {
+            // No real overrides exist — serve a single example row so the download is useful.
+            if ($mode === 'group') {
+                $overrides = [(object) [
+                    'groupid' => '123',
+                    'groupname'     => 'TUTOR B1',
+                    'timeopen'      => '2026-04-21 16:00 +10:00',
+                    'timeclose'     => '',
+                    'timelimit'     => 600,
+                    'attempts'      => 5,
+                    'password'      => 'testpassword',
+                    'set_password'  => '1',
+                ]];
+            } else {
+                $overrides = [(object) [
+                    'userid'       => 'zs123',
+                    'timeopen'     => '2026-04-21 16:00 +10:00',
+                    'timeclose'    => '',
+                    'timelimit'    => 600,
+                    'attempts'     => 5,
+                    'password'     => 'testpassword',
+                    'set_password' => '1',
+                ]];
+            }
+        }
+
+        $headers = array_keys((array) reset($overrides));
+
+        $rows = [];
+        foreach ($overrides as $override) {
+            $rows[] = (array) $override;
+        }
+
+        $additional = $template ? '-template' : '';
+        $filename = clean_filename("{$course->shortname}-{$quiz->name}-{$mode}-overrides{$additional}");
+        \core\dataformat::download_data($filename, 'csv', $headers, $rows);
+
+        exit;
     }
 
-    $fs = get_file_storage();
-    $relativepath = implode('/', $args);
-    $fullpath = "/$context->id/mod_quiz/$filearea/$feedbackid/$relativepath";
-    if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
-        return false;
-    }
-    send_stored_file($file, 0, 0, true, $options);
 }
 
 /**

@@ -68,8 +68,10 @@ class overrides_actions implements renderable, templatable {
      * @return \single_button the button, ready to reander.
      */
     public function create_add_button(\renderer_base $output): \single_button {
-        $addoverrideurl = new moodle_url('/mod/quiz/overrideedit.php',
-                ['cmid' => $this->cmid, 'action' => 'add' . $this->mode]);
+        $addoverrideurl = new moodle_url(
+            '/mod/quiz/overrideedit.php',
+            ['cmid' => $this->cmid, 'action' => 'add' . $this->mode],
+        );
 
         if ($this->mode === 'group') {
             $label = get_string('addnewgroupoverride', 'quiz');
@@ -85,6 +87,34 @@ class overrides_actions implements renderable, templatable {
         return $addoverridebutton;
     }
 
+    /**
+     * Create the import override button.
+     *
+     * @param \renderer_base $output an instance of the quiz renderer.
+     * @return \single_button the button, ready to reander.
+     */
+    public function create_import_button(\renderer_base $output): \single_button {
+        $addoverrideurl = new moodle_url(
+            '/mod/quiz/overrideimport.php',
+            ['cmid' => $this->cmid, 'mode' => $this->mode],
+        );
+
+        $label = get_string('importoverrides', 'quiz', $this->mode);
+
+        $addoverridebutton = new \single_button($addoverrideurl, $label, 'get', \single_button::BUTTON_PRIMARY);
+        if (!$this->addenabled) {
+            $addoverridebutton->disabled = true;
+        }
+
+        return $addoverridebutton;
+    }
+
+    /**
+     * Export this data so it can be used as the context for a mustache template.
+     *
+     * @param renderer_base $output Used to do a final render of any components that need to be rendered for export.
+     * @return array
+     */
     public function export_for_template(renderer_base $output): array {
         global $PAGE;
         $templatecontext = [];
@@ -95,7 +125,7 @@ class overrides_actions implements renderable, templatable {
 
         $menu = [
             $useroverridesurl->out(false) => get_string('useroverrides', 'quiz'),
-            $groupoverridesurl->out(false) => get_string('groupoverrides', 'quiz')
+            $groupoverridesurl->out(false) => get_string('groupoverrides', 'quiz'),
         ];
 
         $overridesnav = new select_menu(
@@ -113,6 +143,9 @@ class overrides_actions implements renderable, templatable {
         // Build the add button - but only if the user can edit.
         if ($this->canedit) {
             $templatecontext['addoverridebutton'] = $this->create_add_button($output)->export_for_template($output);
+            $templatecontext['addimportbutton'] = $this->create_import_button($output)->export_for_template($output);
+            $helpkey = $this->mode === 'group' ? 'overrideimporthelp_group' : 'overrideimporthelp';
+            $templatecontext['importhelptip'] = get_string($helpkey, 'quiz');
         }
 
         return $templatecontext;

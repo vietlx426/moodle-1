@@ -79,9 +79,9 @@ Feature: Quiz user override
       | Close the quiz     | ## 2 January 2020 08:00 ## |
     When I press "Save"
     Then the following should exist in the "generaltable" table:
-      | User        | Overrides   | -4-                  |
-      | Student One | Quiz closes | 1 January 2020, 8:00 |
-      | Student Two | Quiz closes | 2 January 2020, 8:00 |
+      | User        | Quiz closes          |
+      | Student One | 1 January 2020, 8:00 |
+      | Student Two | 2 January 2020, 8:00 |
 
   @javascript
   Scenario: Can add a user override when the quiz is not available to the student
@@ -175,7 +175,7 @@ Feature: Quiz user override
     Then "Student One" "table_row" should exist
     And "Student Two" "table_row" should exist
     And "Add user override" "button" should not exist
-    And I should not see "Action"
+    And I should not see "Actions"
     And "Edit" "link" should not exist in the "Student One" "table_row"
     And "Copy" "link" should not exist in the "Student One" "table_row"
     And "Delete" "link" should not exist in the "Student One" "table_row"

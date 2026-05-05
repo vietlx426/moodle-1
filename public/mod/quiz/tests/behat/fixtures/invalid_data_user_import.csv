@@ -1,0 +1,3 @@
+userid,timeopen,timeclose,timelimit,attempts,password,set_password
+99999,not-a-valid-date,2027-01-01 10:00 +00:00,3600,eleven,,0
+99998,2027-01-02 08:00 +00:00,2027-01-02 06:00 +00:00,3600,2,,apples

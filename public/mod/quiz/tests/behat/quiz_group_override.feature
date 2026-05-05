@@ -64,6 +64,14 @@ Feature: Quiz group override
     Then I should see "There are no groups in this course."
     And the "Add group override" "button" should be disabled
 
+  Scenario: Import button disabled if there are no groups
+    Given the following "permission overrides" exist:
+      | capability                  | permission | role           | contextlevel | reference |
+      | moodle/site:accessallgroups | Prevent    | editingteacher | Course       | C1        |
+    When I am on the "Test quiz" "mod_quiz > Group overrides" page logged in as "teacher3"
+    Then I should see "No groups you can access."
+    And the "Import group overrides" "button" should be disabled
+
   Scenario: A teacher can create an override
     When I am on the "Test quiz" "mod_quiz > Group overrides" page logged in as "teacher1"
     And I press "Add group override"
@@ -77,8 +85,8 @@ Feature: Quiz group override
     And I press "Save"
     Then "Group 1" "table_row" should exist
     # Check all column headers are present.
-    And I should see "Group" in the "Overrides" "table_row"
-    And I should see "Action" in the "Overrides" "table_row"
+    And I should see "Group" in the "Quiz opens" "table_row"
+    And I should see "Action" in the "Quiz opens" "table_row"
 
   Scenario: A teacher with accessallgroups permission should see all group overrides
     Given the following "mod_quiz > group overrides" exist:

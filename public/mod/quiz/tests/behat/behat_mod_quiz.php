@@ -68,6 +68,8 @@ class behat_mod_quiz extends behat_question_base {
      * | Edit              | Quiz name                                   | The edit quiz page (edit.php)                |
      * | Group overrides   | Quiz name                                   | The manage group overrides page              |
      * | User overrides    | Quiz name                                   | The manage user overrides page               |
+     * | User override import | Quiz name                                | The import user overrides page               |
+     * | Group override import | Quiz name                               | The import group overrides page              |
      * | Grades report     | Quiz name                                   | The overview report for a quiz               |
      * | Responses report  | Quiz name                                   | The responses report for a quiz              |
      * | Manual grading report | Quiz name                               | The manual grading report for a quiz         |
@@ -103,6 +105,18 @@ class behat_mod_quiz extends behat_question_base {
             case 'user overrides':
                 return new moodle_url('/mod/quiz/overrides.php',
                     ['cmid' => $this->get_cm_by_quiz_name($identifier)->id, 'mode' => 'user']);
+
+            case 'user override import':
+                return new moodle_url(
+                    '/mod/quiz/overrideimport.php',
+                    ['cmid' => $this->get_cm_by_quiz_name($identifier)->id, 'mode' => 'user'],
+                );
+
+            case 'group override import':
+                return new moodle_url(
+                    '/mod/quiz/overrideimport.php',
+                    ['cmid' => $this->get_cm_by_quiz_name($identifier)->id, 'mode' => 'group'],
+                );
 
             case 'grades report':
                 return new moodle_url('/mod/quiz/report.php',
@@ -1092,5 +1106,81 @@ class behat_mod_quiz extends behat_question_base {
 
         $quiz = $DB->get_record('quiz', ['name' => $quizname], 'id, course', MUST_EXIST);
         \mod_quiz\task\precreate_attempts::precreate_attempts_for_quiz($quiz->id, $quiz->course);
+    }
+
+    /**
+     * Creates a group override import CSV fixture by resolving group idnumbers to their Moodle group DB IDs.
+     *
+     * Example:
+     * Given I create group override import CSV fixture "group_override_import.csv" with:
+     *   | groupidnumber | groupname | timeopen                | timeclose               |
+     *   | G1            |           | 2027-01-01 08:00 +00:00 | 2027-01-01 10:00 +00:00 |
+     * (additional columns: timelimit, attempts, password, set_password)
+     *
+     * @Given I create group override import CSV fixture :filename with:
+     * @param string $filename Filename to write under tests/behat/fixtures/.
+     * @param TableNode $table Behat table containing the rows to write.
+     */
+    public function i_create_group_override_import_csv_fixture(string $filename, TableNode $table): void {
+        global $DB;
+
+        $lines = ['groupid,groupname,timeopen,timeclose,timelimit,attempts,password,set_password'];
+        foreach ($table->getColumnsHash() as $row) {
+            $groupidnumber = $row['groupidnumber'] ?? '';
+            $groupid = '';
+            if (!empty($groupidnumber)) {
+                $group = $DB->get_record('groups', ['idnumber' => $groupidnumber], 'id', MUST_EXIST);
+                $groupid = (string) $group->id;
+            }
+            $lines[] = implode(',', [
+                $groupid,
+                $row['groupname'] ?? '',
+                $row['timeopen'] ?? '',
+                $row['timeclose'] ?? '',
+                $row['timelimit'] ?? '',
+                $row['attempts'] ?? '',
+                $row['password'] ?? '',
+                $row['set_password'] ?? '',
+            ]);
+        }
+
+        $filepath = __DIR__ . '/fixtures/' . $filename;
+        file_put_contents($filepath, implode("\n", $lines) . "\n");
+    }
+
+    /**
+     * Creates a user override import CSV fixture by resolving usernames to their Moodle user IDs.
+     *
+     * This step is needed because the userid column in the import format requires the actual
+     * Moodle internal integer ID, which is only known at test runtime.
+     *
+     * Example:
+     * Given I create user override import CSV fixture "user_override_import.csv" with:
+     *   | username | timeopen                | timeclose               | timelimit | attempts | password | set_password |
+     *   | student1 | 2027-01-01 08:00 +00:00 | 2027-01-01 10:00 +00:00 | 3600      | 2        |          | 0            |
+     *
+     * @Given I create user override import CSV fixture :filename with:
+     * @param string $filename Filename to write under tests/behat/fixtures/.
+     * @param TableNode $table Behat table containing the rows to write.
+     */
+    public function i_create_user_override_import_csv_fixture(string $filename, TableNode $table): void {
+        global $DB;
+
+        $lines = ['userid,timeopen,timeclose,timelimit,attempts,password,set_password'];
+        foreach ($table->getColumnsHash() as $row) {
+            $user = $DB->get_record('user', ['username' => $row['username']], 'id', MUST_EXIST);
+            $lines[] = implode(',', [
+                $user->id,
+                $row['timeopen'] ?? '',
+                $row['timeclose'] ?? '',
+                $row['timelimit'] ?? '',
+                $row['attempts'] ?? '',
+                $row['password'] ?? '',
+                $row['set_password'] ?? '',
+            ]);
+        }
+
+        $filepath = __DIR__ . '/fixtures/' . $filename;
+        file_put_contents($filepath, implode("\n", $lines) . "\n");
     }
 }

@@ -27,6 +27,8 @@
     Context variables required for this template:
     * navigation - must always be present.
     * addoverridebutton - should only be present if the user has permission to add a new override.
+    * addimportbutton - should only be present if the user has permission to add and edit a overrides.
+    * importhelptip - help text shown in a popover on the help icon beside the import button.
 
     Example context (json):
     {
@@ -68,6 +70,24 @@
                     "value": "adduser"
                 }
             ]
+        },
+        "addimportbutton": {
+            "id": "single_button1235",
+            "method": "get",
+            "url": "http://localhost/moodle/mod/quiz/overrideimport.php",
+            "label": "Import user overrides",
+            "classes": "singlebutton",
+            "disabled": false,
+            "params": [
+                {
+                    "name": "cmid",
+                    "value": "73"
+                },
+                {
+                    "name": "mode",
+                    "value": "user"
+                }
+            ]
         }
     }
 }}
@@ -83,5 +103,33 @@
                 {{>core/single_button}}
             </div>
         {{/addoverridebutton}}
+        {{#addimportbutton}}
+            <div class="navitem d-flex align-items-center">
+                {{>core/single_button}}
+                {{#importhelptip}}
+                <a class="btn btn-link p-0 ms-1 icon-no-margin override-import-help-icon"
+                   role="button"
+                   data-bs-container="body"
+                   data-bs-toggle="popover"
+                   data-bs-placement="right"
+                   data-bs-content="{{importhelptip}}"
+                   data-bs-trigger="focus"
+                   tabindex="0"
+                   aria-label="{{#str}}help{{/str}}">
+                    {{#pix}}help, core, {{#str}}help{{/str}}{{/pix}}
+                </a>
+                {{/importhelptip}}
+            </div>
+        {{/addimportbutton}}
+{{#importhelptip}}
+{{#js}}
+require(['theme_boost/bootstrap/popover'], function(Popover) {
+    document.querySelectorAll('.override-import-help-icon[data-bs-toggle="popover"]').forEach(function(el) {
+        Popover.getInstance(el)?.dispose();
+        new Popover(el);
+    });
+});
+{{/js}}
+{{/importhelptip}}
     </div>
 </div>

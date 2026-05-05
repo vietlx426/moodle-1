@@ -350,12 +350,35 @@ $string['emailoverduesmall'] = 'You did not submit your attempt at {$a->quizname
 $string['emailoverduesubject'] = 'Attempt now overdue: {$a->quizname}';
 $string['empty'] = 'Empty';
 $string['enabled'] = 'Enabled';
+$string['encoding'] = 'Encoding';
 $string['endtest'] = 'Finish attempt ...';
 $string['erroraccessingreport'] = 'You cannot access this report';
+$string['errorattempts'] = 'attempt must be integer from 0 to 10';
+$string['errordbinsert'] = 'Error occurred during database insert: {$a}';
+$string['errorduplication'] = 'duplication found';
+$string['erroremptyfile'] = 'File is empty. Please make sure your file is correct as {$a} override template and try again.';
+$string['errorgroupidempty'] = 'groupid or groupname is required';
+$string['errorgroupidnamemismatch'] = 'groupid and groupname not match';
+$string['errorgroupnamenotfound'] = 'groupname not found in course';
+$string['errorgroupnotexist'] = 'groupid not found in course';
+$string['erroridempty'] = 'userid is required';
 $string['errorinquestion'] = 'Error in question';
+$string['errorinvaliddatetime'] = 'Invalid {$a} format';
 $string['errormissingquestion'] = 'Error: The system is missing the question with id {$a}';
+$string['errornoimport'] = 'Rows were processed, but no overrides were found to import.';
+$string['errornooptions'] = 'No override value found';
 $string['errornotnumbers'] = 'Error - answers must be numeric';
+$string['erroropenclose'] = 'Invalid close&open time';
+$string['errorpassword'] = 'invalid password format';
+$string['errorprocessing'] = 'The CSV file contains errors that must be resolved before importing. Please fix all rows with errors and reupload the CSV.';
+$string['errorrowfieldcount'] = 'Row has {$a->actual} fields (expected {$a->expected}) — check for unquoted commas in the password field';
+$string['errorsetpassword'] = 'invalid set_password';
+$string['errorsetpasswordzero'] = 'password should be empty';
+$string['errorstructure'] = 'Wrong header. Please make sure your file is correct as {$a} override template and try again.';
+$string['errortimelimit'] = 'Invalid timelimit';
 $string['errorunexpectedevent'] = 'Unexpected event code {$a->event} found for question {$a->questionid} in attempt {$a->attemptid}.';
+$string['errorusernotenrolled'] = 'userid not found in course';
+$string['errorusernotexist'] = 'userid not found in course';
 $string['essay'] = 'Essay';
 $string['essayquestions'] = 'Questions';
 $string['eventattemptautosaved'] = 'Quiz attempt auto-saved';
@@ -404,6 +427,7 @@ $string['eventslotrequirepreviousupdated'] = 'Slot require previous updated';
 $string['everynquestions'] = 'Every {$a} questions';
 $string['everyquestion'] = 'Every question';
 $string['everythingon'] = 'Everything on';
+$string['templatefile_help'] = 'This file can be used as a template to add overrides for all {$a}. If overrides exist, the file will contain all current override entries. Otherwise, it contains an example override that shows the correct format to be used. When finished adding your overrides, remove the example row, save the file as a CSV, then upload it.';
 $string['existingcategory'] = 'Existing category';
 $string['exportcategory'] = 'export category';
 $string['exporterror'] = 'An error occurred during export processing';
@@ -491,7 +515,10 @@ If your file contains non-ascii characters then it must use UTF-8 encoding. Be p
 
 Import and Export formats are a pluggable resource. Other optional formats may be available in the Modules and Plugins database.';
 $string['import_link'] = 'question/import';
+$string['importback'] = 'Back';
 $string['importcategory'] = 'import category';
+$string['importconfirm'] = 'Are you sure you would like to import?';
+$string['importconfirmbutton'] = 'Confirm';
 $string['importerror'] = 'An error occurred during import processing';
 $string['importfilearea'] = 'Import from file already in course files...';
 $string['importfileupload'] = 'Import from file upload...';
@@ -499,7 +526,11 @@ $string['importfromthisfile'] = 'Import from this file';
 $string['importingquestions'] = 'Importing {$a} questions from file';
 $string['importmaxerror'] = 'There is an error in the question. There are too many answers.';
 $string['importmax10error'] = 'There is an error in the question. You may not have more than ten answers';
+$string['importoverrides'] = 'Import {$a} overrides';
+$string['importpreview'] = 'Import overrides preview';
 $string['importquestions'] = 'Import questions from file';
+$string['importsuccess'] = 'Overrides successfully imported.';
+$string['importvalidate'] = 'Validate';
 $string['inactiveoverridehelp'] = '* This override is inactive because the user\'s access to the activity is restricted. This can be due to group or role assignments, other access restrictions, or the activity being hidden.';
 $string['incorrect'] = 'Incorrect';
 $string['indicator:cognitivedepth'] = 'Quiz cognitive';
@@ -679,10 +710,56 @@ $string['overduehandlinggraceperiod'] = 'There is a grace period when open attem
 $string['overduehandlingautoabandon'] = 'Attempts must be submitted before time expires, or they are not counted';
 $string['overduemustbesubmittedby'] = 'This attempt is now overdue. It should already have been submitted. If you would like this quiz to be graded, you must submit it by {$a}. If you do not submit it by then, no marks from this attempt will be counted.';
 $string['override'] = 'Override';
+$string['overrideaction_delete'] = 'Deleting';
+$string['overrideaction_failed'] = 'Failed';
+$string['overrideaction_insert'] = 'Adding';
+$string['overrideaction_update'] = 'Editing';
+$string['overridedownload'] = 'Download overrides';
+$string['overrideimporthelp'] = 'You are able to download and upload a CSV file for editing. This will allow you to quickly mass upload user overrides. There is a preview screen for changes. If you already have an override for a user, their settings will be updated to the values in the latest upload. Moodle will randomly generate a different password for each user if needed, and apply the same time open, time close, time limit, and attempts to each user.';
+$string['overrideimporthelp_group'] = 'You are able to download and upload a CSV file for editing. This will allow you to quickly mass upload group overrides. There is a preview screen for changes. If you already have an override for a group, their settings will be updated to the values in the latest upload. Moodle will randomly generate a different password for each group if needed, and apply the same time open, time close, time limit, and attempts to each group.';
 $string['overridecannotchange'] = 'The user or group cannot be changed after an override is created.';
 $string['overridecannotsetbothgroupanduser'] = 'Both group and user cannot be set at the same time.';
 $string['overridedeletegroupsure'] = 'Are you sure you want to delete the override for group {$a}?';
 $string['overridedeleteusersure'] = 'Are you sure you want to delete the override for user {$a}?';
+$string['overridefile'] = 'Override file';
+$string['overridefile_group'] = 'Override file';
+$string['overridefile_group_help'] = 'The uploaded CSV file must have the following headers in this exact order:
+
+1. **groupid**: the ID number assigned to the group (leave blank if using groupname).
+2. **groupname**: the name of the group (leave blank if using groupid).
+3. **timeopen**: date/time the quiz opens for this group, format YYYY-MM-DD HH:MM ±HH:MM (or leave blank for no override).
+4. **timeclose**: date/time the quiz closes for this group, same format (or leave blank).
+5. **timelimit**: time limit in seconds, or leave blank for no limit override.
+6. **attempts**: maximum number of attempts (0 = unlimited), or leave blank for no override.
+7. **password**: a password value, or leave blank.
+8. **set_password**: 1 to set/generate a password (uses the provided value, or auto-generates if blank); 0 or blank to clear any existing password. Providing a password value when set_password is 0 or blank is an error.
+
+**It has the following logic:**
+
+* If no group override exists and you provide an override, a new override will be created.
+* If no group override exists and you don\'t provide an override, no override will be created.
+* If a group override exists, and you don\'t provide an override, the override remains unchanged.
+* If a group override exists and you provide new value same as default setting, it will be deleted.
+';
+$string['overridefile_help'] = 'Upload a CSV file containing the overrides to import. Download the template file to see the correct column format.';
+$string['overridefile_user'] = 'Override file';
+$string['overridefile_user_help'] = 'The uploaded CSV file must have the following headers in this exact order:
+
+1. **userid**: the internal Moodle user ID (integer).
+2. **timeopen**: date/time the quiz opens for this user, format YYYY-MM-DD HH:MM ±HH:MM (or leave blank for no override).
+3. **timeclose**: date/time the quiz closes for this user, same format (or leave blank).
+4. **timelimit**: time limit in seconds, or leave blank for no limit override.
+5. **attempts**: maximum number of attempts (0 = unlimited), or leave blank for no override.
+6. **password**: a password value, or leave blank.
+7. **set_password**: 1 to set/generate a password (uses the provided value, or auto-generates if blank); 0 or blank to clear any existing password. Providing a password value when set_password is 0 or blank is an error.
+
+**It has the following logic:**
+
+* If no user override exists and you provide an override, a new override will be created.
+* If no user override exists and you don\'t provide an override, no override will be created.
+* If a user override exists, and you don\'t provide an override, the override remains unchanged.
+* If a user override exists and you provide new value same as default setting, it will be deleted.
+';
 $string['overridegroup'] = 'Override group';
 $string['overridegroupeventname'] = '{$a->quiz} - {$a->group}';
 $string['overridereason'] = 'Reason for override';
@@ -1096,8 +1173,10 @@ $string['subplugintype_quiz_plural'] = 'Reports';
 $string['subplugintype_quizaccess'] = 'Access rule';
 $string['subplugintype_quizaccess_plural'] = 'Access rules';
 $string['substitutedby'] = 'will be substituted by';
+$string['successprocessing'] = 'CSV parsed correctly and all rows passed validation checks. Please verify that each row has been processed correctly.';
 $string['summaryofattempt'] = 'Summary of attempt';
 $string['summaryofattempts'] = 'Your attempts';
+$string['templatefile'] = 'Template file';
 $string['summaryofattemptscaption'] = 'Attempt {$a} summary';
 $string['temporaryblocked'] = 'You are temporarily not allowed to re-attempt the quiz.<br /> You will be able to take another attempt on:';
 $string['theattempt'] = 'The attempt';
