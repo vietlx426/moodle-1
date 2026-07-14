@@ -87,6 +87,10 @@ class category implements renderable, templatable {
         $cmid = $params['cmid'] ?? $this->cmid;
         $courseid = $params['courseid'] ?? $this->courseid;
 
+        // Remove any stale 'filter'/'category' params so this link doesn't keep filtering by a
+        // previously-viewed category instead of the one it actually targets.
+        unset($params['filter'], $params['category']);
+
         // Each section adds html to be displayed as part of this list item.
         $questionbankurl = new moodle_url('/question/edit.php', $params);
         $questionbankurl->param('cat', helper::combine_id_context($this->category));
