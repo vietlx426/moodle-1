@@ -82,6 +82,29 @@ if ($ADMIN->fulltree) {
     $setting = new admin_setting_configtext('tiny_recordrtc/videobitrate', $name, $desc, $default, PARAM_INT, 8);
     $settings->add($setting);
 
+    // Video size.
+    $options = [
+        '240,180' => '240 x 180 (4:3)',
+        '320,180' => '320 x 180 (16:9)',
+        '320,240' => '320 x 240 (4:3)',
+        '426,240' => '426 x 240 (16:9)',
+        '384,288' => '384 x 288 (4:3)',
+        '512,288' => '512 x 288 (16:9)',
+        '480,360' => '480 x 360 (4:3)',
+        '640,360' => '640 x 360 (16:9)',
+        '576,432' => '576 x 432 (4:3)',
+        '640,480' => '640 x 480 (4:3)',
+        '768,432' => '768 x 432 (16:9)',
+        '768,576' => '768 x 576 (4:3)',
+        '1280,720' => '1280 x 720 (16:9)',
+        '1024,768' => '1024 x 768 (4:3)',
+    ];
+    $name = get_string('videosize', 'tiny_recordrtc');
+    $desc = get_string('videosize_desc', 'tiny_recordrtc');
+    $default = '640,480';
+    $setting = new admin_setting_configselect('tiny_recordrtc/videosize', $name, $desc, $default, $options);
+    $settings->add($setting);
+
     // Screen bitrate.
     $name = get_string('screenbitrate', 'tiny_recordrtc');
     $desc = get_string('screenbitrate_desc', 'tiny_recordrtc');

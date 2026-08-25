@@ -95,6 +95,8 @@ final class plugininfo_test extends advanced_testcase {
             'screentimelimit' => get_config('tiny_recordrtc', 'screentimelimit'),
             'videoscreenwidth' => explode(',', get_config('tiny_recordrtc', 'screensize'))[0],
             'videoscreenheight' => explode(',', get_config('tiny_recordrtc', 'screensize'))[1],
+            'videowidth' => explode(',', get_config('tiny_recordrtc', 'videosize'))[0],
+            'videoheight' => explode(',', get_config('tiny_recordrtc', 'videosize'))[1],
             'audiortcformat' => (string) get_config('tiny_recordrtc', 'audiortcformat'),
         ];
         $allowedtypes = explode(',', $settings['allowedtypes']);

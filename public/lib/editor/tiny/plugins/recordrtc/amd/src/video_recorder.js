@@ -63,10 +63,10 @@ export default class Video extends BaseClass {
             audio: true,
             video: {
                 width: {
-                    ideal: 640,
+                    ideal: parseInt(this.config.videowidth),
                 },
                 height: {
-                    ideal: 480,
+                    ideal: parseInt(this.config.videoheight),
                 },
             },
         };
