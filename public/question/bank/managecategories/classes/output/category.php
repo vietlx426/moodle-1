@@ -48,8 +48,7 @@ class category implements renderable, templatable {
      *
      * @param stdClass $category The record of category we are rendering
      * @param context $context The context the category belongs to.
-     * @param int $cmid The cmid of the course module context the category belongs to (optional).
-     * @param int $courseid The course ID of the course context the category belongs to (optional).
+     * @param int $cmid The cmid of the course module context the category belongs to.
      */
     public function __construct(
         /** @var stdClass $category The record of category we are rendering */
@@ -58,8 +57,6 @@ class category implements renderable, templatable {
         protected context $context,
         /** @var int $cmid The cmid of the course module context the category belongs to. */
         protected int $cmid = 0,
-        /** @var int $courseid The course ID of the course context the category belongs to. */
-        protected int $courseid = 0,
     ) {
         $manager = new category_manager();
         $this->canreorder = !$manager->is_only_child_of_top_category_in_context($this->category->id);
@@ -81,15 +78,13 @@ class category implements renderable, templatable {
      * @return array
      */
     public function export_for_template(renderer_base $output): array {
-        global $PAGE;
         $canmanagecategory = has_capability('moodle/question:managecategory', $this->context);
-        $params = $PAGE->url->params();
-        $cmid = $params['cmid'] ?? $this->cmid;
-        $courseid = $params['courseid'] ?? $this->courseid;
 
         // Each section adds html to be displayed as part of this list item.
-        $questionbankurl = new moodle_url('/question/edit.php', $params);
-        $questionbankurl->param('cat', helper::combine_id_context($this->category));
+        $questionbankurl = new moodle_url('/question/edit.php', [
+            'cmid' => $this->cmid,
+            'cat' => helper::combine_id_context($this->category),
+        ]);
         $categoryname = format_string($this->category->name, true, ['context' => $this->context, 'escape' => false]);
         $categorylink = new category_link(
             $categoryname,
@@ -153,8 +148,7 @@ class category implements renderable, templatable {
                     'data-actiontype' => 'edit',
                     'data-contextid' => $thiscontext,
                     'data-categoryid' => $this->category->id,
-                    'data-cmid' => $cmid,
-                    'data-courseid' => $courseid,
+                    'data-cmid' => $this->cmid,
                     'data-questioncount' => $this->category->questioncount,
                 ]
             ));
@@ -164,13 +158,11 @@ class category implements renderable, templatable {
         if (qbank::is_plugin_enabled('qbank_exportquestions')) {
             $exporturl = new moodle_url(
                 '/question/bank/exportquestions/export.php',
-                ['cat' => helper::combine_id_context($this->category)]
+                [
+                    'cat' => helper::combine_id_context($this->category),
+                    'cmid' => $this->cmid,
+                ]
             );
-            if ($courseid !== 0) {
-                $exporturl->param('courseid', $courseid);
-            } else {
-                $exporturl->param('cmid', $cmid);
-            }
 
             $menu->add(new action_menu_link(
                 $exporturl,
@@ -185,13 +177,12 @@ class category implements renderable, templatable {
             // Sets up delete link.
             $deleteurl = new moodle_url(
                 '/question/bank/managecategories/category.php',
-                ['delete' => $this->category->id, 'sesskey' => sesskey()]
+                [
+                    'delete' => $this->category->id,
+                    'sesskey' => sesskey(),
+                    'cmid' => $this->cmid,
+                ]
             );
-            if ($courseid !== 0) {
-                $deleteurl->param('courseid', $courseid);
-            } else {
-                $deleteurl->param('cmid', $cmid);
-            }
             $menu->add(new action_menu_link(
                 $deleteurl,
                 new pix_icon('t/delete', 'delete'),
@@ -215,7 +206,7 @@ class category implements renderable, templatable {
         $children = [];
         if (!empty($this->category->children)) {
             foreach ($this->category->children as $child) {
-                $childcategory = new category($child, $this->context);
+                $childcategory = new category($child, $this->context, $this->cmid);
                 $children[] = $childcategory->export_for_template($output);
             }
         }
