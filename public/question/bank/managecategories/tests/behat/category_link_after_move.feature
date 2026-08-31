@@ -37,7 +37,7 @@ Feature: Category links on the manage categories page always show that category'
     And I press "Move questions"
     And I click on "Confirm" "button"
     And I wait until the page is ready
-    And I click on "Questions" "text" in the "#tertiary-navigation" "css_element"
+    And I click on "Questions" "text" in the "nav.tertiary-navigation-selector > div.dropdown.select-menu" "css_element"
     And I click on "Categories" "list_item"
     And I wait until the page is ready
     When I click on "Category A" "link" in the "Category A" "list_item"
