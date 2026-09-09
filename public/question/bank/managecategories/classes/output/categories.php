@@ -54,7 +54,7 @@ class categories implements renderable, templatable {
             $itemstab = [];
             if (count($list->items)) {
                 foreach ($list->items as $item) {
-                    $category = new category($item, $context);
+                    $category = new category($item, $context, $this->categories->cmid);
                     $itemstab['items'][] = $category->export_for_template($output);
                 }
             }

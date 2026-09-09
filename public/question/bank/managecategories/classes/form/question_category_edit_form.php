@@ -264,7 +264,6 @@ class question_category_edit_form extends \core_form\dynamic_form {
             $record,
             context::instance_by_id($record->contextid),
             $values->cmid ?? 0,
-            $values->courseid ?? 0,
         );
 
         return [
