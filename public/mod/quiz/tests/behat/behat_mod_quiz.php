@@ -357,6 +357,32 @@ class behat_mod_quiz extends behat_question_base {
     }
 
     /**
+     * Make the random questions in a quiz point at a context that is not a module context.
+     *
+     * This simulates broken data, where the source question bank of a random question cannot be resolved.
+     *
+     * @param string $quizname the name of the quiz.
+     *
+     * @Given /^the random questions in quiz "([^"]*)" have an unresolvable question bank$/
+     */
+    public function the_random_questions_in_quiz_have_an_unresolvable_question_bank(string $quizname): void {
+        global $DB;
+
+        $cm = $this->get_cm_by_quiz_name($quizname);
+        $conditions = [
+            'usingcontextid' => \core\context\module::instance($cm->id)->id,
+            'component' => 'mod_quiz',
+            'questionarea' => 'slot',
+        ];
+        $DB->set_field(
+            'question_set_references',
+            'questionscontextid',
+            \core\context\course::instance($cm->course)->id,
+            $conditions,
+        );
+    }
+
+    /**
      * Put the specified section headings to start at specified pages of a given quiz.
      *
      * The first row should be column names:
