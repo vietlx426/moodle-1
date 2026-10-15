@@ -233,6 +233,16 @@ Feature: Adding random questions to a quiz based on category and tags
     And I should not see "bar"
     And I should not see "question 2 name"
 
+  Scenario: Random question without a resolvable question bank is shown without the See questions link
+    Given quiz "Quiz 1" contains the following questions:
+      | question | page | randomcategory       |
+      | Random   | 1    | Questions Category 1 |
+    And the random questions in quiz "Quiz 1" have an unresolvable question bank
+    When I am on the "Quiz 1" "mod_quiz > Edit" page logged in as "teacher1"
+    Then I should see "Random (Questions Category 1) based on filter condition" on quiz page "1"
+    And I should not see "(See questions)"
+    And "Configure question" "link" should exist in the "Random (Questions Category 1) based on filter condition" "list_item"
+
   Scenario: User cannot add random questions from a bank they can't see
     And the following "users" exist:
       | username | firstname | lastname | email                |
