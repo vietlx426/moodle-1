@@ -1171,16 +1171,21 @@ class edit_renderer extends \plugin_renderer_base {
         $icon = $this->pix_icon('random', $namestr, 'mod_quiz', ['class' => 'icon activityicon']);
 
         $editicon = $this->pix_icon('t/edit', $configuretitle, 'moodle', ['title' => '']);
-        $qbankurlparams = [
-            'cmid' => $structure->get_source_bank($slotnumber)->cminfo->id,
-            'filter' => json_encode($slot->filtercondition['filter']),
-        ];
 
         // If this is a random question, display a link to show the questions
-        // selected from in the question bank.
-        $qbankurl = new \moodle_url('/question/edit.php', $qbankurlparams);
-        $qbanklink = ' ' . \html_writer::link($qbankurl,
-                        get_string('seequestions', 'quiz'), ['class' => 'mod_quiz_random_qbank_link']);
+        // selected from in the question bank. Omit it if the source bank cannot be resolved.
+        $qbanklink = '';
+        if ($bank = $structure->get_source_bank($slotnumber)) {
+            $qbankurl = new \moodle_url('/question/edit.php', [
+                'cmid' => $bank->cminfo->id,
+                'filter' => json_encode($slot->filtercondition['filter']),
+            ]);
+            $qbanklink = ' ' . \html_writer::link(
+                $qbankurl,
+                get_string('seequestions', 'quiz'),
+                ['class' => 'mod_quiz_random_qbank_link'],
+            );
+        }
 
         $editlink = html_writer::link(
             $pageurl->out(),
